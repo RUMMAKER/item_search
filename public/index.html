@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>InDev</title>
+		<link rel="stylesheet" href="css/style.css">
+		<meta name="viewport" content="initial-scale=1.0">
+    	<meta charset="utf-8">
+	</head>
+	
+	<body>
+		<div id="divOverlay">
+			<div id="divResult"></div>
+			<div id="divSearch">
+				<br>
+				<p class="controlText">Find
+					<select>
+						<option value="1">Best Buy</option>
+					</select>
+					stores 
+				</p> 
+				<br>
+				<br>
+				<p class="controlText"> within
+					<input class="control" id="txtDistance" type="text" size="1" value="10" oninput="restrictDistanceInput()">
+					KM
+				</p>
+				<br>
+				<br>
+				<p class="controlText"> of
+					<select id="ddlLocation" onchange="changeLocationType()">
+						<option value="1">Current Location</option>
+						<option value="2">Postal Code</option>
+					</select>
+					<input id="txtPostal" type="text" placeholder="A1A 1A1">
+				</p>
+				<br>
+				<br>
+				<p class="controlText">
+					that sells
+					<input class="control" id="txtSearch" type="text" size="10" placeholder="item name">
+				</p>
+				<br>
+				<br>
+				<button id="btnSearch" type="button" disabled onclick="itemSearch()">Search!</button>
+			</div>
+		</div>
+		<div id="map"></div>
+		<script src="js/httpclient.js"></script>
+		<script src="js/googlemap.js"></script>
+		<script src="js/bestbuy.js"></script>
+		<script src="js/item_search.js"></script>
+	    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCD3tyyCzIXxDyQj25gVSnb-L0BgJCKhKA&libraries=places&callback=init" async defer></script>
+	</body>
+</html>
