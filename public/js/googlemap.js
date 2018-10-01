@@ -2,17 +2,19 @@ var GoogleMap = function (callback) {
 	this.map; // google.maps.Map
 	this.geocoder; // google.maps.Geocoder
 	var mapMarkers = []; // references to existing google.maps.Marker
+
+	var centerOffsetX = -10; // offsets map center from searchCenter by vw.
+	this.searchCenter; // center of rangeCircle
+	this.searchRange; // radius of rangeCircle
 	var rangeCircle; // google.maps.Circle
 
-	// Convert distance (in meters) to the zoom level to use for this.map
-	this.distanceToZoom = function(distance) {
-		return 25-Math.log(distance)/Math.LN2;
-	}
-
-	// Add listener to callback when user hovers over marker.
+	// Add listener to callback when user hovers/clicks over marker.
 	// And listener to callback2 when user mouse out marker.
 	this.addResultListener = function(callback, callback2, marker) {
         marker.addListener('mouseover', function() {
+			callback();
+        });
+        marker.addListener('click', function() {
 			callback();
         });
         marker.addListener('mouseout', function() {
@@ -38,9 +40,9 @@ var GoogleMap = function (callback) {
 	}
 
 	// Change the radius of rangeCircle, also create rangeCircle if it is not initialized yet
-	this.setRange = function(range) {
+	this.setSearchRange = function(range) {
 		if (this.map === undefined) return;
-
+		this.searchRange = range;
 		if (rangeCircle === undefined) {
 			rangeCircle = new google.maps.Circle({
 				strokeColor: '#FF0000',
@@ -49,36 +51,21 @@ var GoogleMap = function (callback) {
 				fillColor: '#FF0000',
 				fillOpacity: 0.3,
 				map: this.map,
-				center: this.map.getCenter(),
-				radius: range
+				center: this.searchCenter,
+				radius: this.searchRange
 			});
 		}
-		rangeCircle.setCenter(this.map.getCenter());
-		rangeCircle.setRadius(range);
+		rangeCircle.setCenter(this.searchCenter);
+		rangeCircle.setRadius(this.searchRange);
+		this.map.fitBounds(rangeCircle.getBounds());
 	}
 
-	// Change zoom level of map according to distance, also calls setRange and sets range according to distance
-	this.updateZoom = function(distance) {
+	// Center map on searchCenter + centerOffsetX
+	this.setSearchCenter = function(coord) {
 		if (this.map === undefined) return;
-		this.map.setZoom(this.distanceToZoom(distance));
-		this.setRange(distance);
-	}
-
-	// Returns LatLngLiteral of this.map.getCenter
-	this.getMapCenter = function() {
-		if (this.map === undefined) return undefined;
-		var lat = this.map.getCenter().lat();
-		var lng = this.map.getCenter().lng();
-		var center = {lat: 1*lat, lng: 1*lng};
-		return center;
-	}
-
-	this.centerMapOnLocation = function(coord) {
-		if (this.map === undefined) return new Promise((resolve, reject)=>{reject();});
-		return new Promise((resolve, reject)=>{
-				this.map.setCenter(coord);
-				resolve();
-		});
+		this.searchCenter = coord;
+		this.map.setCenter(this.searchCenter);
+		this.map.panBy(vwToPx(centerOffsetX), 0);
 	}
 
 	// Create map
@@ -90,6 +77,7 @@ var GoogleMap = function (callback) {
 		minZoom:12,
 		zoom:16
 	});
+	this.searchCenter = this.map.getCenter();
 
 	// Run the callback, currently the callback is used to init some UI stuff once google maps finishes loading
 	// Maybe refactor to return promise instead

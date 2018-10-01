@@ -21,6 +21,7 @@ function init() {
 
 	// Init map
 	googlemap = new GoogleMap(() => {
+		divResult.style.display = "none";
 		btnSearch.disabled = false;
 	});
 	geocoder = new google.maps.Geocoder();
@@ -54,11 +55,10 @@ function postalToGeo(postalCode) {
 	});
 }
 
-// Search for item in nearby stores then display results on map.
-function itemSearch() {
+// Get currentLocation using user position or postal code.
+function getLocation() {
 	var location;
 	if (ddlLocation.options[ddlLocation.selectedIndex].value === "1") { 
-		// Use current position for map center.
 		location = getCurrentLocation();
 	} else { 
 		// Use postalCode for map center.
@@ -68,27 +68,31 @@ function itemSearch() {
 			location = postalToGeo(txtPostal.value);
 		}
 	}
-
-	// Center map on location, then search and display search result on map.
-	location.then((loc) => {
-		googlemap.centerMapOnLocation(loc);
-	}).then(itemSearchHelper).catch(() => {
-		console.log('something went wrong...');
-	});
+	return location;
 }
 
-// Query bestbuy api for search results then display results on map.
-function itemSearchHelper() {
-	var distance = txtDistance.value * 1000;
-	var itemQuery = txtSearch.value;
+// Search for item in nearby stores then display results on map.
+function itemSearch() {
+	getLocation()
+	.then((loc) => {
+		var distance = txtDistance.value * 1000;
+		var itemQuery = txtSearch.value;
 
-	googlemap.clearMarkers();
-	googlemap.updateZoom(distance);
-	bestbuy.getNearbyStores(googlemap.getMapCenter(), distance)
-	.then((stores) => {
-		for (var i = 0; i < stores.length; i++) {
-			markStoreIfContainItem(itemQuery, stores[i].store);
-		}
+		bestbuy.getNearbyStores(loc, distance)
+		.then((stores) => {
+			for (var i = 0; i < stores.length; i++) {
+				markStoreIfContainItem(itemQuery, stores[i].store);
+			}
+		}).then(() => {
+			// Center map on location.
+			googlemap.clearMarkers();
+			googlemap.setSearchCenter(loc);
+			googlemap.setSearchRange(distance);
+			googlemap.setSearchCenter(loc);
+		});
+	})
+	.catch(() => {
+		console.log('something went wrong...');
 	});
 }
 
@@ -115,7 +119,7 @@ function markStoreIfContainItem(itemQuery, store) {
 	.catch(() => {console.log('markStore went wrong...')});
 }
 
-// Helper function to get the content to display in the infowindow for a store marker.
+// Helper function to convert api response to innerHtml content for display purposes.
 function itemsToString(store, items) {
 	var itemStr = '';
 	for (var i = 0; i < items.length && i < 3; i++) {
@@ -143,6 +147,7 @@ function restrictDistanceInput() {
 	}
 }
 
+// Show/Hide txtPostalCode depending on ddlLocation value.
 function changeLocationType() {
 	var locType = ddlLocation.options[ddlLocation.selectedIndex].value;
 	if (locType === "1") {
@@ -151,8 +156,4 @@ function changeLocationType() {
 	else {
 		txtPostal.style.display = "inline";
 	}
-}
-
-function validateLocation() {
-	return true;
 }
