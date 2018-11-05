@@ -61,16 +61,30 @@ var GoogleMap = function (callback) {
 		this.map.panBy(vwToPx(centerOffsetX), 0);
 	}
 
+	this.resize = function() {
+		this.setSearchCenter(this.searchCenter);
+		this.setSearchRange(this.searchRange);
+		this.setSearchCenter(this.searchCenter);
+	}
+
 	// Create map
 	this.map = new google.maps.Map(document.getElementById('map'), {
 		gestureHandling:"none",
 		disableDefaultUI:true,
-		center:{lat: 0, lng: 0},
+		center:{lat: 49.1987, lng: 122.8125},
 		maxZoom:16,
-		minZoom:12,
+		minZoom:11,
 		zoom:16
 	});
 	this.searchCenter = this.map.getCenter();
+
+	self = this;
+	google.maps.event.addDomListener(window, "resize", function() {
+		google.maps.event.trigger(self.map, "resize");
+		if (rangeCircle != undefined) {
+			self.resize();
+		}
+	});
 
 	// Run the callback, currently the callback is used to init some UI stuff once google maps finishes loading
 	// Maybe refactor to return promise instead
