@@ -1,28 +1,27 @@
-var divResult;
-var divSearch;
 var txtDistance;
 var txtPostal;
-var ddlLocation;
 var txtSearch;
 var btnSearch;
 var googlemap;
 var geocoder;
+var btnShowModal;
+var storeHeader;
+var storeContent;
 
 // Init should be called once google maps api finishes loading.
 function init() {
 	// Set references to UI stuff
-	divResult = document.getElementById("divResult");
-	divSearch = document.getElementById("divSearch");
 	txtDistance = document.getElementById("txtDistance");
 	txtPostal = document.getElementById("txtPostal");
-	ddlLocation = document.getElementById("ddlLocation");
 	txtSearch = document.getElementById("txtSearch");
 	btnSearch = document.getElementById("btnSearch");
+	btnShowModal = document.getElementById("btnShowModal");
+	storeHeader = document.getElementById("storeHeader");
+	storeContent = document.getElementById("storeContent");
 
 	// Init map
 	googlemap = new GoogleMap(() => {
-		divResult.style.display = "none";
-		btnSearch.disabled = false;
+		// btnSearch.disabled = false;
 	});
 	geocoder = new google.maps.Geocoder();
 }
@@ -55,18 +54,13 @@ function postalToGeo(postalCode) {
 	});
 }
 
-// Get currentLocation using user position or postal code.
+// Get currentLocation using current position or postal code.
 function getLocation() {
 	var location;
-	if (ddlLocation.options[ddlLocation.selectedIndex].value === "1") { 
+	if (txtPostal.value.trim().length == 0) {
 		location = getCurrentLocation();
-	} else { 
-		// Use postalCode for map center.
-		if (txtPostal.value.trim().length == 0) {
-			location = getCurrentLocation();
-		} else {
-			location = postalToGeo(txtPostal.value);
-		}
+	} else {
+		location = postalToGeo(txtPostal.value);
 	}
 	return location;
 }
@@ -107,12 +101,9 @@ function markStoreIfContainItem(itemQuery, store) {
 			var marker = googlemap.createMarker({lat: 1*lat, lng: 1*lng});
 			var content = itemsToString(store, items);
 			googlemap.addResultListener(() => {
-				divResult.innerHTML = content;
-				divResult.style.display = "block";
-				divSearch.style.display = "none";
-			}, () => {
-				divResult.style.display = "none";
-				divSearch.style.display = "block";
+				storeHeader.innerHTML = content[0];
+				storeContent.innerHTML = content[1];
+				btnShowModal.click();
 			}, marker);
 		}
 	})
@@ -129,8 +120,9 @@ function itemsToString(store, items) {
 		}
 		itemStr += '<br><p>' + imgStr + items[i].summary.names.short + '</p>';
 	}
-	return  '<h1>' + store.storeDetails.name + '(Best Buy)' + '</h1>'+
-            '<p> Top 3 relevant items in store:</p>'+ itemStr;
+	body = '<p> Top 3 relevant items in store:</p>'+ itemStr;
+    header = store.storeDetails.name + '(Best Buy)';
+    return [header, body];
 }
 
 // Restricts distanceField value to 1-10
@@ -144,16 +136,5 @@ function restrictDistanceInput() {
 	}
 	if (txtDistance.value * 1 < 1) {
 		txtDistance.value = 1;
-	}
-}
-
-// Show/Hide txtPostalCode depending on ddlLocation value.
-function changeLocationType() {
-	var locType = ddlLocation.options[ddlLocation.selectedIndex].value;
-	if (locType === "1") {
-		txtPostal.style.display = "none";
-	}
-	else {
-		txtPostal.style.display = "inline";
 	}
 }

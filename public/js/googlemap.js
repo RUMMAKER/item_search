@@ -3,22 +3,15 @@ var GoogleMap = function (callback) {
 	this.geocoder; // google.maps.Geocoder
 	var mapMarkers = []; // references to existing google.maps.Marker
 
-	var centerOffsetX = -10; // offsets map center from searchCenter by vw.
+	var centerOffsetX = 0; // offsets map center from searchCenter by vw.
 	this.searchCenter; // center of rangeCircle
 	this.searchRange; // radius of rangeCircle
 	var rangeCircle; // google.maps.Circle
 
-	// Add listener to callback when user hovers/clicks over marker.
-	// And listener to callback2 when user mouse out marker.
-	this.addResultListener = function(callback, callback2, marker) {
-        marker.addListener('mouseover', function() {
-			callback();
-        });
+	// Add listener to callback when user clicks over marker.
+	this.addResultListener = function(callback, marker) {
         marker.addListener('click', function() {
 			callback();
-        });
-        marker.addListener('mouseout', function() {
-			callback2();
         });
 	}
 
